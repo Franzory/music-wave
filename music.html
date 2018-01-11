@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		*{
+			margin:0px;
+			padding: 0px;
+		}
+		body,html{
+			width: 100%;
+			height: 100%;
+		}
+		body{
+			position: relative;
+			background: #ccc; 
+		}
+		#canvas{
+			display: block;
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			-webkit-transform: translateY(-50%) translateX(-50%);
+			-ms-transform: translateY(-50%) translateX(-50%);
+			-o-transform: translateY(-50%) translateX(-50%);
+			transform: translateY(-50%) translateX(-50%);
+			background: #fff;
+		}
+		h2{
+			display: block;
+			width: 100%;
+			text-align: center;
+			position: absolute;
+			top: 10%;
+		}
+	</style>
+	<script src="http://apps.bdimg.com/libs/jquery/2.1.1/jquery.min.js"></script>
+</head>
+<body>
+	<h2>加载中音频中</h2>
+	<canvas id="canvas" height="500" width="1000"></canvas>
+</body>
+</html>
+<script>
+
+		var AudioContext = new window.AudioContext;
+		var canvas;
+		var context;
+		var key = true;
+		var max_v=0;
+
+		function loadSound(url) {
+		    var request = new XMLHttpRequest(); 
+		    request.open('GET', url, true);
+		    request.responseType = 'arraybuffer'; 
+		    request.onload = function() {
+		        var music = request.response;
+		        AudioContext.decodeAudioData(music, function(buffer) {
+		        	start(buffer);
+		        	document.getElementsByTagName('h2')[0].style.display = 'none';
+		    	});
+		    }
+		    request.send();
+		}
+
+		var start = function(buffer) {
+		    var audioBufferSourceNode = AudioContext.createBufferSource();
+		    var analyser = AudioContext.createAnalyser();
+
+		    audioBufferSourceNode.connect(analyser);
+		    analyser.connect(AudioContext.destination);
+		    audioBufferSourceNode.buffer = buffer;
+		    audioBufferSourceNode.start(0);
+
+		    render(analyser);
+
+		}
+
+		var render = function(analyser){
+
+			var array = new Uint8Array(analyser.frequencyBinCount);
+			analyser.getByteFrequencyData(array);
+
+			context.clearRect(0,0,1000,500);
+			context.beginPath();
+
+			for(var i=0; i<=array.length;i++){
+				if(i==0){
+					context.moveTo(i,450-array[i]);
+				}else{
+					context.lineTo(i,450-array[i]);
+				}
+			}
+
+			context.stroke();
+			context.closePath();
+
+			window.requestAnimationFrame(function(){render(analyser)});
+		}
+
+		window.onload = function(){
+			canvas = document.getElementById('canvas');
+			context = canvas.getContext('2d');
+			loadSound("Deorro.mp3"); //调用
+		}
+
+	</script>
